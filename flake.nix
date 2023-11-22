@@ -1,5 +1,7 @@
 {
-  description = "Description for the project";
+  # why would you work with multiple java projects? hells, why would you even use java?
+  # why would I do that? WHY DID I DO THAT
+  description = "A Nix flake for working with multiple Java projects.";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
@@ -7,21 +9,24 @@
 
   outputs = inputs @ {flake-parts, ...}:
     flake-parts.lib.mkFlake {inherit inputs;} {
-      imports = [];
       systems = ["x86_64-linux"];
+
       perSystem = {
         self',
         pkgs,
         ...
-      }: {
+      }: let
+        inherit (pkgs) callPackage mkShell;
+      in {
         packages = {
+          compileAll = callPackage ./pkgs/compileAll.nix {};
+
           default = self'.packages.compileAll;
-          compileAll = pkgs.callPackage ./pkgs/compileAll.nix {};
         };
 
-        devShells.default = pkgs.mkShell {
+        devShells.default = mkShell {
           JAVA_HOME = pkgs.openjdk17.home;
-          M2_HOME = ./.;
+          M2_HOME = ./. + "/maven";
 
           buildInputs = with pkgs; [
             openjdk17
